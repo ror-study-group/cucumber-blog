@@ -194,9 +194,9 @@ An example will be less confusing… Let's make our own Feature. Start by creati
 
 	Feature: Create Post
 		
-		As a user
+		As a guest
 		I want to create a post
-		So that other users can read it
+		So that guests can read it
 		
 		Scenario: creating a blog post
 			Given there is a simple blog form
@@ -209,12 +209,12 @@ Lets see what happens when we run `$ cucumber`
 
 	Feature: Create Post
 	
-	    As a user
+	    As a guest
 	    I want to create a post
-	    So that other users can read it
+	    So that guests can read it
 	
 	  Scenario: creating a blog post
-	    Given there is a simple blog form
+	    Given there is title field and body field
 	      Undefined step: "there is a simple blog form" (Cucumber::Undefined)
 	      features/create_post.feature:8:in `Given there is a simple blog form'
 	    When I create a blog post

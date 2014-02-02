@@ -3,9 +3,6 @@ source 'https://rubygems.org'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.0.1'
 
-# Use sqlite3 as the database for Active Record
-gem 'sqlite3'
-
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 4.0.0'
 
@@ -43,3 +40,25 @@ end
 
 # Use debugger
 # gem 'debugger', group: [:development, :test]
+
+group :test do
+  gem "cucumber-rails"
+  gem "database_cleaner" #ensure a clean state during tests
+  gem "guard-rspec" #automatically runs specs
+  gem "terminal-notifier-guard" #growl notifications
+  gem "simplecov" #code coverage analysis tool
+end
+
+group :development do
+  gem "pry"
+  gem "better_errors"
+  gem "binding_of_caller" #grab bindings from higher up the call stack
+end
+
+group :development, :test do
+  gem "rspec-rails"
+  gem "sqlite3"
+  gem "factory_girl_rails"
+  gem "capybara"
+  gem "launchy" #launch browser from command line
+end

@@ -1,5 +1,18 @@
 # Outside-In Rails Development
 
+##Suggested Reading
+
+*[The RSpec Book](http://pragprog.com/book/achbd/the-rspec-book)* A little old but still very useful.
+
+*[Everyday Rails: Testing with RSpec](https://leanpub.com/everydayrailsrspec)*
+
+*[Agile Web Development with Rails 4](http://pragprog.com/book/rails4/agile-web-development-with-rails-4)*
+
+*[The Cucumber Book](http://pragprog.com/book/rails4/agile-web-development-with-rails-4)*
+
+
+
+
 ##Intro info to confuse you
 Important. NOTE: This overview is specific to rails but you should also know how to test OUTSIDE of rails.
 
@@ -145,7 +158,7 @@ We're going to build a simple blog using RSpec, Capybara, FactoryGirl, *and* Cuc
 	Finished in 0.0001 seconds
 	0 examples, 0 failures
 
-Cool, RSpec works and found no tests. Let's do try Cucumber:
+Cool, RSpec works and found no tests. Let's try Cucumber:
 `$ rake cucumber`
 
 	Using the default profile...
@@ -157,7 +170,7 @@ Great! Let's write a scenario!
 
 ####Start with Cucumber
 ***
-Remember the BDD Cycle? We have to start with a failing (red) Acceptance Test. In this case, our Acceptance Tests will written with Cucumber.
+Remember the BDD Cycle? We have to start with a failing (red) Acceptance Test. In this case, our Acceptance Tests are written with Cucumber.
 
 #####Features
 In Cucumber we make a **Feature** first and a Feature includes one or more **Scenarios**.
@@ -203,7 +216,7 @@ An example will be less confusing… Let's make our own Feature. Start by creati
 			
 Non-technical team members can understand this perfectly. And later on, these feature files can be very useful as documentation.
 
-Don't be mistaken: Creating these concise, descriptive user stories is the bulk of the work when it comes to testing. You'll find that, once you start trying to answer your own questions, you'll realize that the story is too complicated, or that the feature is something entirely different.
+Don't be mistaken: Creating concise, descriptive user stories is the bulk of the work when it comes to testing. You'll find that, once you start trying to answer your own questions, you'll realize that the story is too complicated, or that the feature is something entirely different.
 
 Good tests take practice!
 
@@ -297,4 +310,140 @@ Add a file named `post_steps.rb` within the `features/step_definitions` director
 	
 	1 scenario (1 failed)
 	4 steps (1 failed, 3 skipped)
-	0m0.590sGreat! We failed a step! Looks like we're missing our new_post route. Let's take care of that.	
+	0m0.590sGreat! We failed a step! Looks like we're missing our new_post route. Let's take care of that.
+We're gonna rip through most of this because you already know it.
+put `resources :posts` in `config/routes.rb`
+`$ cucumber`
+      Given there is a simple blog form        uninitialized constant PostsController (ActionController::RoutingError)
+        ./features/step_definitions/post_steps.rb:2:in `/^there is a simple blog form$/'
+        features/create_post.feature:8:in `Given there is a simple blog form'
+      Still failing, missing controller!
+*app/controllers/posts_controller.rb*
+	class PostsController < ApplicationController
+	  def index
+		@posts = Post.all
+	  end
+	
+	  def show
+		@post = Post.find(params[:id])
+	  end
+	
+	  def new
+		@post = Post.new
+	  end
+	
+	  def create
+	 	@post = Post.new(post_params)
+	
+	 	if @post.save
+		  redirect_to post_path(@post)
+		else
+		  render :new
+		end
+	  end
+
+	  private
+
+	  def post_params
+		params.require(:post).permit(:title, :body)
+	  end
+  	  
+	end
+
+`$ cucumber`
+
+	Given there is a simple blog form      
+	  uninitialized constant PostsController::Post (NameError)
+      ./app/controllers/posts_controller.rb:12:in `new'
+      ./features/step_definitions/post_steps.rb:2:in `/^there is a simple blog form$/'
+      features/create_post.feature:8:in `Given there is a simple blog form'
+      
+Looks like we need a `Post` model.
+
+`$ rails g model Post title:string body:text`
+
+`$ rake db:migrate`
+
+`$ rake db:test:prepare`
+
+`$ cucumber`
+
+	    Given there is a simple blog form
+	      Missing template posts/new…
+
+And now for the view.
+
+*app/views/posts/new.html.erb*
+
+	<h1>New post</h1>
+	<%= form_for(@post) do |f| %>
+	  <div class="field">
+	    <%= f.label :title %><br>
+	    <%= f.text_field :title %>
+	  </div>
+	  <div class="field">
+	    <%= f.label :body %><br>
+	    <%= f.text_area :body %>
+	  </div>
+	  <div class="actions">
+	    <%= f.submit %>
+	  </div>
+	<% end %>
+	
+	<%= link_to 'Back', posts_path %>
+
+`$ cucumber`
+
+	    Given there is a simple blog form
+	    When I create a blog post
+	      Missing template posts/show, application/show with {:locale=>[:en], :formats=>[:html], :handlers=>[:erb, :builder, :raw, :ruby, :jbuilder, :coffee]}. Searched in:
+	        * "/Users/Sidney/dev/simple_blog_2/app/views"
+	       (ActionView::MissingTemplate)
+	      /Users/Sidney/.rvm/rubies/ruby-2.0.0-p353/lib/ruby/2.0.0/benchmark.rb:296:in `realtime'
+	      ./features/step_definitions/post_steps.rb:8:in `/^I create a blog post$/'
+	      features/create_post.feature:9:in `When I create a blog post'
+	    Then I should see "First post" in the post title. 
+	    And I should see "Hello World" in the post body.
+	   
+	Failing Scenarios:
+	cucumber features/create_post.feature:7 # Scenario: creating a blog post
+		
+	1 scenario (1 failed)
+	4 steps (1 failed, 2 skipped, 1 passed)
+	0m2.884s
+	
+Holy shit! Our first step passed! Now we're onto the next step, which requires `show` view.
+
+*app/views/show.html.erb*
+
+	<p>
+	  <strong>Title:</strong>
+	  <%= @post.title %>
+	</p>
+	
+	<p>
+	  <strong>Body:</strong>
+	  <%= @post.body %>
+	</p>
+	
+`$ cucumber`
+
+	Feature: Create Post
+	
+	  As a guest
+	  I want to create a post
+	  So that other guests can read it
+	
+	  Scenario: creating a blog post
+	    Given there is a simple blog form
+	    When I create a blog post
+	    Then I should see "First post" in the post title.
+	    And I should see "Hello World" in the post body.
+	
+	1 scenario (1 passed)
+	4 steps (4 passed)
+	0m0.857s
+	
+Great! All steps passed! But we never made our granular Unit Tests (RSpec) and didn't use FactoryGirl…
+
+#####STAY TUNED

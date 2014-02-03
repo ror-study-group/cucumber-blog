@@ -412,7 +412,14 @@ And now for the view.
 	4 steps (1 failed, 2 skipped, 1 passed)
 	0m2.884s
 	
-Holy shit! Our first step passed! Now we're onto the next step, which requires `show` view.
+Holy shit! Our first step passed! 
+
+There's something incredible in here though. Here's where you can start to see the power of these Acceptance tests:
+
+Remember our `post_steps.rb` Step Definitions? We explicitly stated we wanted to `visit new_post_path`. But we didn't say *anything* about `show_post_path`, and yet Cucumber knows we need it.
+
+It's because Capybara is actually pretending to be a user. It found our site in `Given()` and, in `When()`, plugged in some info and clicked Submit and found there was no `show` view. Let's create it now.
+
 
 *app/views/show.html.erb*
 
@@ -444,6 +451,8 @@ Holy shit! Our first step passed! Now we're onto the next step, which requires `
 	4 steps (4 passed)
 	0m0.857s
 	
-Great! All steps passed! But we never made our granular Unit Tests (RSpec) and didn't use FactoryGirl…
+Great! All steps passed! Cucumber/Capybara found our site, entered some info, and found the info after we submitted.
+
+We never made our granular Unit Tests (RSpec) and didn't use FactoryGirl…
 
 #####STAY TUNED

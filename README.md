@@ -23,8 +23,8 @@ Important. NOTE: This overview is specific to rails but you should also know how
 **FactoryGirl** - Generally speaking, FactoryGirl allows you to make objects (such as users, posts or comments) without creating real-deal ActiveRecord objects. It allows you to configure what a standard instance of any ActiveRecord database object should look like in a central place so that your test code is clutter-free.
 More info: [Rails Testing — Factory Girl](http://www.hiringthing.com/2012/08/17/rails-testing-factory-girl.html#sthash.t30UMlFy.dpuf)
 
-#### Integration Testing
-*Integration tests build on unit tests by combining the units of code and testing the resulting combination.*
+#### Acceptance Testing
+*Checks a particular feature for correctness by comparing the results for a given input against the specification.*
 
 **Capybara** - Tool to write integration tests that interact with a website the way a human would. This example uses RSpec:
 
@@ -46,9 +46,6 @@ More info: [Rails Testing — Factory Girl](http://www.hiringthing.com/2012/08/1
 	end
 	
 **Webrat** - Used in the *Cucumber Book*. Similar to Capybara, you probably wouldn't use both simultaneously. Capybara has more architectural flexibility. 
-
-#### Acceptance Testing
-*Checks a particular feature for correctness by comparing the results for a given input against the specification.*
 
 **Cucumber** - Tool to write acceptance tests with almost plain-text, **business-readable domain-specific language**. It is useful to pass around to **non-developers** but also requires some code mapped into it to actually work (the step definitions).
 	
@@ -91,25 +88,25 @@ We're going to build a simple blog using RSpec, Capybara, FactoryGirl, *and* Cuc
 ####Gemfile
 
 	group :test do
-		gem "cucumber-rails"
-		gem "database_cleaner" #ensure a clean state during tests
-		gem "guard-rspec" #automatically runs specs
-		gem "terminal-notifier-guard" #growl notifications
-		gem "simplecov" #code coverage analysis tool
+	  gem "cucumber-rails"
+	  gem "database_cleaner" #ensure a clean state during tests
+	  gem "guard-rspec" #automatically runs specs
+	  gem "terminal-notifier-guard" #growl notifications
+	  gem "simplecov" #code coverage analysis tool
 	end
 
 	group :development do
-		gem "pry"
-		gem "better_errors"
-		gem "binding_of_caller" #grab bindings from higher up the call stack
+	  gem "pry"
+	  gem "better_errors"
+	  gem "binding_of_caller" #grab bindings from higher up the call stack
 	end
 
 	group :development, :test do
-		gem "rspec-rails"
-		gem "sqlite3" #move this from above to here
-		gem "factory_girl_rails"
-		gem "capybara"
-		gem "launchy" #launch browser from command line
+	  gem "rspec-rails"
+	  gem "sqlite3" #remove this from above and put it here
+	  gem "factory_girl_rails"
+	  gem "capybara"
+	  gem "launchy" #launch browser from command line
 	end
 
 `$ bundle`
@@ -165,13 +162,13 @@ Remember the BDD Cycle? We have to start with a failing (red) Acceptance Test. I
 #####Features
 In Cucumber we make a **Feature** first and a Feature includes one or more **Scenarios**.
 
-Features are written in almost-plain English but it still helps to have a few rules. Thus, we have *The Connextra Format* aka *user story format*, a key element of any Agile development team.
+Although Features are written in almost-plain English, it still helps to have a few rules. Thus, we have *The Connextra Format* aka *user story format*, a key element of any Agile producton team.
 	
 	Feature: <feature name>
 	
 		As a <role>		I want <feature>		So that <business value>
 
-An alternative:
+A popular alternative:
 	
 	Feature: <feature name>
 	
@@ -179,13 +176,13 @@ An alternative:
 		As a <role>
 		I want <feature>
 
-After we have the basic idea (the Feature) we describe an applicable Scenario. Scenarios are written in *Given, When, Then* format.
+After we have the basic idea (the Feature), and it's description (Feature Narrative), we describe an applicable Scenario. Scenarios are written in *Given, When, Then* format.
 
 	Scenario: <scenario name>
 	
-		Given: <state of the world before an event>
-		When: <the event>
-		Then: <expected outcome>
+		Given <state of the world before an event>
+		When <the event>
+		Then <expected outcome>
 
  
 An example will be less confusing… Let's make our own Feature. Start by creating a file named `create_post.feature` in the features directory with the following content:
@@ -193,40 +190,48 @@ An example will be less confusing… Let's make our own Feature. Start by creati
 *simple_blog/features/create_post.feature*
 
 	Feature: Create Post
-		
-		As a guest
-		I want to create a post
-		So that guests can read it
-		
-		Scenario: creating a blog post
-			Given there is a simple blog form
-			When I create a blog post
-			Then I should see "Hello World" in the text body.
+	
+	  As a guest
+	  I want to create a post
+	  So that other guests can read it
+	
+	  Scenario: creating a blog post
+	    Given there is a simple blog form
+	    When I create a blog post
+	    Then I should see "First post" in the post title.
+		And I should see "Hello World" in the post body.
 			
-Non-technical team members can understand this perfectly while you're simultaneously writing *the code you wish you had*.
+Non-technical team members can understand this perfectly. And later on, these feature files can be very useful as documentation.
 
-Lets see what happens when we run `$ cucumber`
+Don't be mistaken: Creating these concise, descriptive user stories is the bulk of the work when it comes to testing. You'll find that, once you start trying to answer your own questions, you'll realize that the story is too complicated, or that the feature is something entirely different.
+
+Good tests take practice!
+
+Anyway, we wrote a Feature. Lets see what happens when we run `$ cucumber`
 
 	Feature: Create Post
 	
-	    As a guest
-	    I want to create a post
-	    So that guests can read it
+	  As a guest
+	  I want to create a post
+	  So that other guests can read it
 	
 	  Scenario: creating a blog post
-	    Given there is title field and body field
-	      Undefined step: "there is a simple blog form" (Cucumber::Undefined)
+	    Given there is a simple blog form
+	  	  Undefined step: "there is a simple blog form" (Cucumber::Undefined)
 	      features/create_post.feature:8:in `Given there is a simple blog form'
-	    When I create a blog post
-	      Undefined step: "I create a blog post" (Cucumber::Undefined)
+		When I create a blog post
+		  Undefined step: "I create a blog post" (Cucumber::Undefined)
 	      features/create_post.feature:9:in `When I create a blog post'
-	    Then I should see "Hello World" in the text body.
-		  Undefined step: "I should see "Hello World" in the text body." (Cucumber::Undefined)
-	      features/create_post.feature:10:in `Then I should see "Hello World" in the text body.'
+	    Then I should see "First post" in the post title.
+	      Undefined step: "I should see "First post" in the post title." (Cucumber::Undefined)
+	      features/create_post.feature:10:in `Then I should see "First post" in the post title.'
+	    And I should see "Hello World" in the post body.
+	      Undefined step: "I should see "Hello World" in the post body." (Cucumber::Undefined)
+	      features/create_post.feature:11:in `And I should see "Hello World" in the post body.'
 	
 	1 scenario (1 undefined)
-	3 steps (3 undefined)
-	0m0.512s
+	4 steps (4 undefined)
+	0m1.078s
 	
 	You can implement step definitions for undefined steps with these snippets:
 	
@@ -238,52 +243,58 @@ Lets see what happens when we run `$ cucumber`
 	  pending # express the regexp above with the code you wish you had
 	end
 	
-	Then(/^I should see "(.*?)" in the text body\.$/) do |arg1|
+	Then(/^I should see "(.*?)" in the post title\.$/) do |arg1|
+	  pending # express the regexp above with the code you wish you had
+	end
+	
+	Then(/^I should see "(.*?)" in the post body\.$/) do |arg1|
 	  pending # express the regexp above with the code you wish you had
 	end
 
-The takeaway here is that we see the feature and scenario text from the `create_post.feature` file, a summary of everything that was run, and then some code snippets that we can use for our **Step Definitions**.
+Ok, what the WT fuck, right? We see the feature and scenario text from the `create_post.feature` file, a summary of everything that was run, and then some code snippets at the end. 
+
+The code snippets are telling you to ***implement step definitions for undefined steps*** and ***express the regexp above with the code you wish you had***. We do that in our **Step Definitions**. 
 
 ##### Step Definitions
-A **Step Definition** is a method that creates a step. We use the *Given()*, *When()*, and *Then()* methods to write step definitions. 
+A **Step Definition** is a method that creates a step. It is specific to Cucumber. We use the `Given()`, `When()`, and `Then()` methods to write step definitions. 
 
-Add a file named `post_steps.rb` within the `features/step_definitions` directory with a following code.
+Add a file named `post_steps.rb` within the `features/step_definitions` directory with the following code: 
 
 *simple_blog/features/step_definitions/post_steps.rb*
-	Given(/^there is a simple blog form$/) do
-	 #TODO create a form
+	Given /^there is a simple blog form$/ do
+	  visit new_post_path
 	end
 	
-	When(/^I create a blog post$/) do
-	  @post = Post.new
+	When /^I create a blog post$/ do
+	  fill_in 'Title', with: 'First post'
+	  fill_in 'Body', with: 'Hello World'
+	  click_button 'Create Post'
 	end
 	
-	Then(/^I should see "(.*?)" in the text body\.$/) do |text|
-	 @post.body = text
+	Then /^I should see "(.*?)" in the post (.*?)\.$/ do |content, field|
+	  expect(page).to have_content content
 	end
-So we took the code snippets from when we ran cucumber and manipulated them a little. We left ***Given*** blank because we just want to provide context for the subsequent steps. ***When*** is where our action is. Lets run `$ cucumber` and see what happens now.
+We replaced `pending # express the regexp above with the code you wish you had` with ***[Capybara](https://github.com/jnicklas/capybara)***. Capybara is its own *domain specific language*, it uses RSpec, and will simply take practice/reference to get the syntax right. Capybara, quite literally, runs a web browser and executes an event. It's pretty simple to understand, right? 
+Lets run `$ cucumber` and see what happens now.
 
 	Feature: Create Post
 	
-	    As a user
-	    I want to create a post
-	    So that other users can read it
+	  As a guest
+	  I want to create a post
+	  So that other guests can read it
 	
 	  Scenario: creating a blog post
 	    Given there is a simple blog form
+	      undefined local variable or method `new_post_path' for #<Cucumber::Rails::World:0x007fb5a4d166e8> (NameError)
+	      ./features/step_definitions/post_steps.rb:2:in `/^there is a simple blog form$/'
+	      features/create_post.feature:8:in `Given there is a simple blog form'
 	    When I create a blog post
-	      uninitialized constant Post (NameError)
-	      ./features/step_definitions/post_steps.rb:6:in `/^I create a blog post$/'
-	      features/create_post.feature:9:in `When I create a blog post'
-	    Then I should see "Hello World" in the text body. # features/step_definitions/post_steps.rb:9
-	
+	    Then I should see "First post" in the post title.
+	    And I should see "Hello World" in the post body.
+	    
 	Failing Scenarios:
-	cucumber features/create_post.feature:7
+	cucumber features/create_post.feature:7 # Scenario: creating a blog post
 	
 	1 scenario (1 failed)
-	3 steps (1 failed, 1 skipped, 1 passed)
-	0m0.427sGreat! We failed a step! Looks like we just made up a `Post` object without defining it. Thanks, Cucumber, I'll take care of that.
-`$ rails g model Post title:string body:text`
-`$ rake db:migrate`
-`$ rake cucumber`
-	
+	4 steps (1 failed, 3 skipped)
+	0m0.590sGreat! We failed a step! Looks like we're missing our new_post route. Let's take care of that.	
